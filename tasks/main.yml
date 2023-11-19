@@ -1,0 +1,31 @@
+---
+- name: Delete i attr in authorized_keys file
+  file:
+    path: "/root/.ssh/authorized_keys"
+    attr: '-i'
+
+- name: Write ssh keys
+  copy:
+    content: "item"
+    dest: "/root/.ssh/authorized_keys"
+    mode: 0600
+  with_items: "{{ ssh_protect_root_public_keys }}"
+
+- name: Setup i attr in authorized_keys file
+  file:
+    path: "/root/.ssh/authorized_keys"
+    attr: i
+
+- name: Authentication method public key only
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    search_string: '^#?AuthenticationMethods'
+    line: AuthenticationMethods publickey
+  notify: restart sshd
+
+- name: Disable password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    search_string: '^#?PasswordAuthentication'
+    line: PasswordAuthentication no
+  notify: restart sshd
